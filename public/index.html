@@ -3,90 +3,80 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lista de Tareas</title>
+<title>Reservas Restaurante</title>
 <style>
-body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; background: #f4f4f9; }
-h1 { color: #333; border-bottom: 2px solid #5cb85c; padding-bottom: 10px; }
-#new-task-form { display: flex; gap: 10px; margin-bottom: 25px; }
-#task-title { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 16px; }
-button { cursor: pointer; padding: 10px 15px; border: none; border-radius: 4px; font-weight: bold; }
-button[type="submit"] { background-color: #5cb85c; color: white; }
-button[type="submit"]:hover { background-color: #4cae4c; }
-.task-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #ddd; background: white; margin-bottom: 5px; border-radius: 4px; }
-.task-item.completed { background-color: #e9ecef; }
-.task-item.completed span { text-decoration: line-through; color: #888; }
-.actions button { margin-left: 8px; padding: 8px 12px; border-radius: 4px; }
-.actions .toggle-btn { background-color: #007bff; color: white; }
-.actions .toggle-btn.undo { background-color: #ffc107; color: #333; }
-.actions .delete-btn { background-color: #dc3545; color: white; }
-.actions button:hover { opacity: 0.9; }
+body { font-family: sans-serif; max-width: 700px; margin: auto; padding: 20px; background: #f4f4f9; }
+h1 { color: #333; border-bottom: 2px solid #ff5722; padding-bottom: 10px; }
+form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+input, select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
+button { padding: 10px; border: none; border-radius: 4px; background: #ff5722; color: white; cursor: pointer; }
+button:hover { opacity: 0.9; }
+.reserva { display: flex; justify-content: space-between; padding: 10px; background: white; border-radius: 4px; margin-bottom: 5px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.actions button { margin-left: 5px; background: #dc3545; }
 </style>
 </head>
 <body>
-<h1>📋 Lista de Tareas</h1>
-<form id="new-task-form">
-<input type="text" id="task-title" placeholder="Nueva tarea..." required>
-<button type="submit">Agregar</button>
+
+<h1>📅 Reservas Restaurante</h1>
+
+<form id="reserva-form">
+  <input type="text" id="nombre" placeholder="Nombre" required>
+  <input type="date" id="fecha" required>
+  <input type="number" id="personas" placeholder="Número de personas" min="1" required>
+  <input type="text" id="mesa" placeholder="Mesa" required>
+  <button type="submit">Reservar</button>
 </form>
-<div id="tasks-list"></div>
+
+<div id="reservas-list"></div>
 
 <script>
-const tasksList = document.getElementById('tasks-list');
-const newTaskForm = document.getElementById('new-task-form');
-const taskTitleInput = document.getElementById('task-title');
+const reservasList = document.getElementById('reservas-list');
+const form = document.getElementById('reserva-form');
 
-async function loadTasks() {
+async function loadReservas() {
   try {
-    const res = await fetch('/api/tasks');
-    const tasks = await res.json();
-    tasksList.innerHTML = '';
-    tasks.forEach(task => {
+    const res = await fetch('/api/reservas');
+    const reservas = await res.json();
+    reservasList.innerHTML = '';
+    reservas.forEach(r => {
       const div = document.createElement('div');
-      div.className = `task-item ${task.completed ? 'completed' : ''}`;
-      div.dataset.id = task.id;
-      const span = document.createElement('span');
-      span.textContent = task.title;
-      const actions = document.createElement('div');
-      actions.className = 'actions';
-      const toggleBtn = document.createElement('button');
-      toggleBtn.className = `toggle-btn ${task.completed ? 'undo' : ''}`;
-      toggleBtn.textContent = task.completed ? 'Desfacer' : 'Completar';
-      toggleBtn.onclick = () => toggleTask(task.id, !task.completed);
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'delete-btn';
-      deleteBtn.textContent = 'Eliminar';
-      deleteBtn.onclick = () => deleteTask(task.id);
-      actions.appendChild(toggleBtn);
-      actions.appendChild(deleteBtn);
-      div.appendChild(span);
-      div.appendChild(actions);
-      tasksList.appendChild(div);
+      div.className = 'reserva';
+      div.innerHTML = `<span>${r.nombre} - ${r.fecha} - ${r.personas} personas - Mesa ${r.mesa}</span>`;
+      const btn = document.createElement('button');
+      btn.textContent = 'Cancelar';
+      btn.onclick = () => deleteReserva(r.id);
+      div.appendChild(btn);
+      reservasList.appendChild(div);
     });
-    if (tasks.length === 0) tasksList.innerHTML = '<p style="text-align:center;color:#666;">No hay tareas pendientes</p>';
-  } catch(e) { console.error(e); tasksList.innerHTML = '<p style="color:red;">Error cargando tareas</p>'; }
+    if(reservas.length===0) reservasList.innerHTML='<p style="text-align:center;color:#666;">No hay reservas</p>';
+  } catch(e){console.error(e);}
 }
 
-newTaskForm.addEventListener('submit', async e => {
+form.addEventListener('submit', async e=>{
   e.preventDefault();
-  const title = taskTitleInput.value.trim();
-  if (!title) return;
-  await fetch('/api/tasks', { method: 'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({title}) });
-  taskTitleInput.value = '';
-  loadTasks();
+  const nombre = document.getElementById('nombre').value.trim();
+  const fecha = document.getElementById('fecha').value;
+  const personas = parseInt(document.getElementById('personas').value);
+  const mesa = document.getElementById('mesa').value.trim();
+  if(!nombre||!fecha||!personas||!mesa) return;
+
+  await fetch('/api/reservas',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({nombre,fecha,personas,mesa})
+  });
+
+  form.reset();
+  loadReservas();
 });
 
-async function toggleTask(id, completed) {
-  await fetch(`/api/tasks/${id}`, { method: 'PUT', headers:{'Content-Type':'application/json'}, body: JSON.stringify({completed}) });
-  loadTasks();
+async function deleteReserva(id){
+  if(!confirm('¿Cancelar esta reserva?')) return;
+  await fetch(`/api/reservas/${id}`, {method:'DELETE'});
+  loadReservas();
 }
 
-async function deleteTask(id) {
-  if(!confirm('¿Eliminar esta tarea?')) return;
-  await fetch(`/api/tasks/${id}`, { method: 'DELETE' });
-  loadTasks();
-}
-
-window.onload = loadTasks;
+window.onload = loadReservas;
 </script>
 </body>
 </html>

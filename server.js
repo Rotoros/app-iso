@@ -11,67 +11,57 @@ const app = express();
 const port = 3000;
 const dbFile = join(__dirname, 'db.json');
 
-// Configuración de lowdb
 const adapter = new JSONFile(dbFile);
-const db = new Low(adapter, { tasks: [] });
+const db = new Low(adapter, { reservas: [] });
 
-// Middleware
 app.use(express.json());
 app.use(express.static(join(__dirname, 'public')));
 
-// Inicializar DB
 async function initializeDB() {
   await db.read();
-  db.data ||= { tasks: [] };
+  db.data ||= { reservas: [] };
   await db.write();
 }
 
 initializeDB().then(() => {
   console.log("✅ Base de datos LowDB inicializada.");
 
-  // Obtener todas las tareas
-  app.get('/api/tasks', async (req, res) => {
+  // Obtener reservas
+  app.get('/api/reservas', async (req, res) => {
     await db.read();
-    res.json(db.data.tasks);
+    res.json(db.data.reservas);
   });
 
-  // Crear nueva tarea
-  app.post('/api/tasks', async (req, res) => {
-    const { title } = req.body;
-    if (!title) return res.status(400).json({ error: 'El título es obligatorio' });
+  // Crear reserva
+  app.post('/api/reservas', async (req, res) => {
+    const { nombre, fecha, personas, mesa } = req.body;
+    if (!nombre || !fecha || !personas || !mesa) {
+      return res.status(400).json({ error: 'Todos los campos son obligatorios.' });
+    }
 
-    const newTask = { id: Date.now(), title, completed: false };
+    const newReserva = {
+      id: Date.now(),
+      nombre,
+      fecha,
+      personas,
+      mesa
+    };
+
     await db.read();
-    db.data.tasks.push(newTask);
+    db.data.reservas.push(newReserva);
     await db.write();
-    res.status(201).json(newTask);
+    res.status(201).json(newReserva);
   });
 
-  // Cambiar estado de tarea
-  app.put('/api/tasks/:id', async (req, res) => {
-    const taskId = parseInt(req.params.id);
-    const { completed } = req.body;
-
+  // Cancelar reserva
+  app.delete('/api/reservas/:id', async (req, res) => {
+    const id = parseInt(req.params.id);
     await db.read();
-    const task = db.data.tasks.find(t => t.id === taskId);
-    if (!task) return res.status(404).json({ error: 'Tarea no encontrada' });
-
-    if (completed !== undefined) task.completed = completed;
-    await db.write();
-    res.json(task);
-  });
-
-  // Eliminar tarea
-  app.delete('/api/tasks/:id', async (req, res) => {
-    const taskId = parseInt(req.params.id);
-
-    await db.read();
-    const initialLength = db.data.tasks.length;
-    db.data.tasks = db.data.tasks.filter(t => t.id !== taskId);
-
-    if (db.data.tasks.length === initialLength)
-      return res.status(404).json({ error: 'Tarea no encontrada' });
-
+    const initialLength = db.data.reservas.length;
+    db.data.reservas = db.data.reservas.filter(r => r.id !== id);
+    if (db.data.reservas.length === initialLength) {
+      return res.status(404).json({ error: 'Reserva no encontrada.' });
+    }
     await db.write();
     res.status(204).send();
   });
@@ -79,6 +69,5 @@ initializeDB().then(() => {
   // Servir frontend
   app.get('/', (req, res) => res.sendFile(join(__dirname, 'index.html')));
 
-  // Iniciar servidor
   app.listen(port, () => console.log(`🚀 Servidor en http://localhost:${port}`));
 });

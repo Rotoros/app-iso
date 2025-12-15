@@ -1,7 +1,7 @@
 {
-  "name": "proyecte-iso",
+  "name": "appReservas",
   "version": "1.0.0",
-  "description": "Aplicación isomórfica de lista de tareas con lowdb",
+  "description": "Gestor de reservas de mesas en un restaurante",
   "main": "server.js",
   "type": "module",
   "scripts": {
