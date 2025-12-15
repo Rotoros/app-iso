@@ -1,0 +1,14 @@
+{
+  "name": "proyecte-iso",
+  "version": "1.0.0",
+  "description": "Aplicación isomórfica de lista de tareas con lowdb",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "lowdb": "^6.0.1"
+  }
+}
