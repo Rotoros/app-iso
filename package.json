@@ -1,5 +1,5 @@
 {
-  "name": "appReserva",
+  "name": "appReservas",
   "version": "1.0.0",
   "description": "Gestor de reservas de mesas en un restaurante",
   "main": "server.js",
