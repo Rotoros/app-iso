@@ -1,3 +1,11 @@
 {
-  "reservas": []
+  "reservas": [
+    {
+      "id": 1765812721881,
+      "nombre": "Pedro",
+      "fecha": "2001-01-01",
+      "personas": 23,
+      "mesa": "12"
+    }
+  ]
 }
