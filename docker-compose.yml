@@ -1,0 +1,7 @@
+services:
+  app:
+    build: .
+    container_name: node_isomorfica
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
